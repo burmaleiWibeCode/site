@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Небольшая просьба — один выходной</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #05060a;
+    --fg: #f5f5f7;
+    --muted: #a1a1aa;
+    --accent: #7cc4ff;
+    --accent2: #b28bff;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* Aurora background */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .aurora::before, .aurora::after {
+    content: '';
+    position: absolute;
+    width: 70vmax;
+    height: 70vmax;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    animation: float 18s ease-in-out infinite;
+  }
+  .aurora::before {
+    background: radial-gradient(circle at center, #3b82f6, transparent 60%);
+    top: -20vmax; left: -15vmax;
+  }
+  .aurora::after {
+    background: radial-gradient(circle at center, #a855f7, transparent 60%);
+    bottom: -25vmax; right: -20vmax;
+    animation-delay: -9s;
+  }
+  .grain {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(5vmax, 3vmax) scale(1.15); }
+  }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 32px;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(5,6,10,0.6);
+    border-bottom: 1px solid var(--border);
+    transition: padding 0.3s ease;
+  }
+  nav .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 15px; }
+  nav .logo span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  nav .links { display: flex; gap: 24px; font-size: 13px; color: var(--muted); }
+  nav .links a { color: inherit; text-decoration: none; transition: color 0.2s; }
+  nav .links a:hover { color: var(--fg); }
+
+  /* Sections */
+  section { padding: 120px 24px; position: relative; }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center;
+    padding: 120px 24px 60px;
+  }
+  .hero .eyebrow {
+    display: inline-block;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card);
+    margin-bottom: 32px;
+    animation: fadeUp 1s ease both;
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 7vw, 5.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.02;
+    max-width: 15ch;
+    animation: fadeUp 1s 0.15s ease both;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(120deg, #7cc4ff 0%, #b28bff 50%, #ff9ad5 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p {
+    max-width: 620px;
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    color: var(--muted);
+    margin-top: 24px;
+    animation: fadeUp 1s 0.3s ease both;
+  }
+  .scroll-hint {
+    position: absolute; bottom: 32px;
+    font-size: 12px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase;
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100%{ transform: translateY(0); opacity: 0.6;} 50%{ transform: translateY(8px); opacity: 1;} }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(.2,.8,.2,1), transform 0.9s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  h2 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .lead {
+    color: var(--muted);
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    max-width: 640px;
+    margin-bottom: 56px;
+  }
+
+  /* Argument cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    position: relative;
+    padding: 32px 28px;
+    border-radius: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(.2,.8,.2,1), border-color 0.4s, background 0.4s;
+  }
+  .card::before {
+    content: '';
+    position: absolute; inset: -1px;
+    background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(124,196,255,0.15), transparent 40%);
+    opacity: 0; transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  .card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); }
+  .card:hover::before { opacity: 1; }
+  .card .num {
+    font-size: 13px; font-weight: 600; color: var(--accent);
+    letter-spacing: 0.1em; margin-bottom: 14px; display: block;
+  }
+  .card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .card p { color: var(--muted); font-size: 0.95rem; }
+
+  /* Toggle section */
+  .toggle-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .toggle {
+    display: inline-flex;
+    padding: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    margin: 32px 0 48px;
+    position: relative;
+  }
+  .toggle button {
+    position: relative; z-index: 2;
+    background: transparent; border: none; color: var(--muted);
+    font: inherit; font-weight: 500; font-size: 14px;
+    padding: 12px 26px; border-radius: 999px; cursor: pointer;
+    transition: color 0.3s;
+  }
+  .toggle button.active { color: #05060a; }
+  .toggle .slider {
+    position: absolute; top: 6px; bottom: 6px;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+    transition: all 0.45s cubic-bezier(.4,0,.2,1);
+    z-index: 1;
+  }
+  .panel {
+    max-width: 640px;
+    padding: 40px;
+    border-radius: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    animation: fadeUp 0.6s ease both;
+    min-height: 220px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .panel h3 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .panel p { color: var(--muted); font-size: 1.02rem; }
+  .panel .tag {
+    display: inline-block; font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    background: rgba(124,196,255,0.12); color: var(--accent); margin-bottom: 16px; font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 32px;
+    margin-top: 40px;
+  }
+  .stat { text-align: left; }
+  .stat .val {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800; letter-spacing: -0.04em;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 1;
+  }
+  .stat .lbl { color: var(--muted); font-size: 0.95rem; margin-top: 8px; }
+
+  /* Quote / final */
+  .final {
+    text-align: center;
+    padding: 140px 24px;
+  }
+  .final blockquote {
+    font-size: clamp(1.5rem, 3.4vw, 2.4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    max-width: 820px;
+    margin: 0 auto 40px;
+  }
+  .final blockquote .grad {
+    background: linear-gradient(120deg, #7cc4ff, #b28bff, #ff9ad5);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .btn {
+    display: inline-block;
+    padding: 16px 32px;
+    border-radius: 999px;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    color: #05060a; font-weight: 600; font-size: 15px;
+    text-decoration: none; letter-spacing: -0.01em;
+    transition: transform 0.25s, box-shadow 0.25s;
+    box-shadow: 0 8px 32px rgba(124,196,255,0.25);
+  }
+  .btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 40px rgba(178,139,255,0.35); }
+  .btn:active { transform: translateY(0) scale(0.99); }
+
+  footer {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Progress bar */
+  .progress {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    z-index: 200; width: 0%; transition: width 0.1s linear;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 14px 18px; }
+    nav .links { display: none; }
+    section { padding: 80px 18px; }
+    .card { padding: 26px 22px; }
+    .panel { padding: 28px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="aurora"></div>
+<div class="grain"></div>
+
+<nav>
+  <div class="logo">Просьба <span>·</span> один выходной</div>
+  <div class="links">
+    <a href="#why">Почему</a>
+    <a href="#choice">Компромисс</a>
+    <a href="#final">Просьба</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="eyebrow">Маленькая просьба от друга</span>
+  <h1>Иногда <span class="grad">один</span> спокойный выходной<br/>стоит больше,<br/>чем <span class="grad">два</span> вынужденных.</h1>
+  <p>Я не пришёл спорить или вмешиваться в ваши решения. Я просто хочу, чтобы вы услышали: ему действительно нужен отдых — и он готов договариваться.</p>
+  <div class="scroll-hint">Листайте ↓</div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="container">
+    <div class="reveal">
+      <h2>Три вещи, которые важно знать</h2>
+      <p class="lead">Это не капризы. Это то, что я вижу, глядя на своего друга каждый день.</p>
+    </div>
+    <div class="grid">
+      <div class="card reveal">
+        <span class="num">01 — УСТАЛОСТЬ</span>
+        <h3>Он реально вымотан</h3>
+        <p>Учёба, дела, постоянное напряжение. Ему нужен хотя бы один день, чтобы выдохнуть — иначе он приедет копать колодец уже без сил и без желания.</p>
+      </div>
+      <div class="card reveal">
+        <span class="num">02 — УВАЖЕНИЕ</span>
+        <h3>Он не отказывается помогать</h3>
+        <p>Он не против колодца. Он против того, чтобы это было «прямо сейчас и без разговоров». Он предлагает перенести или сократить — это уже взрослый разговор.</p>
+      </div>
+      <div class="card reveal">
+        <span class="num">03 — ДОВЕРИЕ</span>
+        <h3>Компромисс работает лучше давления</h3>
+        <p>Если пойти навстречу один раз — он ответит тем же в следующий. Если давить — он просто научится врать и скрываться. Второе хуже для всех.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHOICE -->
+<section id="choice">
+  <div class="container toggle-wrap">
+    <div class="reveal">
+      <h2>Давайте выберем вместе</h2>
+      <p class="lead">Переключите — и увидите, чем закончится каждый вариант.</p>
+    </div>
+    <div class="toggle" id="toggle">
+      <div class="slider" id="slider"></div>
+      <button data-panel="0" class="active">Два дня, как есть</button>
+      <button data-panel="1">Один день — компромисс</button>
+    </div>
+    <div class="panel" id="panel">
+      <!-- content swapped by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section>
+  <div class="container">
+    <div class="reveal">
+      <h2>Немного цифр</h2>
+      <p class="lead">Просто чтобы было видно масштаб.</p>
+    </div>
+    <div class="stats">
+      <div class="stat reveal">
+        <div class="val" data-count="2">0</div>
+        <div class="lbl">выходных дня подряд без отдыха</div>
+      </div>
+      <div class="stat reveal">
+        <div class="val" data-count="1">0</div>
+        <div class="lbl">день, которого достаточно, чтобы восстановиться</div>
+      </div>
+      <div class="stat reveal">
+        <div class="val" data-count="100" data-suffix="%">0</div>
+        <div class="lbl">готовность помочь — если договориться</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final" id="final">
+  <div class="reveal">
+    <blockquote>«Я не прошу отменить колодец.<br/>Я прошу <span class="grad">услышать</span> его —<br/>и дать один выходной.»</blockquote>
+    <a href="#why" class="btn">Вернуться к аргументам</a>
+  </div>
+</section>
+
+<footer>
+  С уважением, друг вашего сына. · Спасибо, что дочитали.
+</footer>
+
+<script>
+  // Progress bar
+  const progress = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    progress.style.width = scrolled + '%';
+  });
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Card mouse-glow
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  // Toggle panels
+  const panels = [
+    {
+      tag: 'Вариант 1',
+      title: 'Оба дня — работа и обида',
+      text: 'Он поедет, но без желания. Сделает минимум, будет молчать или огрызаться. Вернётся ещё более уставшим, чем был. И запомнит: «меня не слышат». В следующий раз он просто соврёт, что занят.'
+    },
+    {
+      tag: 'Вариант 2',
+      title: 'Один день — и он выложится',
+      text: 'Он отдохнёт в субботу, приедет в воскресенье с силами и настроением. Сделает больше, чем за два дня через «не хочу». И главное — увидит, что с ним считаются. Это вложение в доверие, а не потеря.'
+    }
+  ];
+  const panelEl = document.getElementById('panel');
+  const toggleBtns = document.querySelectorAll('#toggle button');
+  const slider = document.getElementById('slider');
+
+  function moveSlider(btn) {
+    slider.style.width = btn.offsetWidth + 'px';
+    slider.style.left = btn.offsetLeft + 'px';
+  }
+  function renderPanel(i) {
+    const p = panels[i];
+    panelEl.innerHTML = `<span class="tag">${p.tag}</span><h3>${p.title}</h3><p>${p.text}</p>`;
+    panelEl.style.animation = 'none';
+    requestAnimationFrame(() => { panelEl.style.animation = 'fadeUp 0.5s ease both'; });
+  }
+  toggleBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      toggleBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      moveSlider(btn);
+      renderPanel(i);
+    });
+  });
+  // init
+  window.addEventListener('load', () => {
+    moveSlider(toggleBtns[0]);
+    renderPanel(0);
+  });
+  window.addEventListener('resize', () => {
+    const active = document.querySelector('#toggle button.active');
+    if (active) moveSlider(active);
+  });
+
+  // Counters
+  const counters = document.querySelectorAll('.val[data-count]');
+  const cio = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const el = e.target;
+        const target = +el.dataset.count;
+        const suffix = el.dataset.suffix || '';
+        const dur = 1400;
+        const start = performance.now();
+        function tick(now) {
+          const t = Math.min((now - start) / dur, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          el.textContent = Math.round(target * eased) + suffix;
+          if (t < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+        cio.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => cio.observe(c));
+
+  // Subtle parallax on aurora
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', (e) => {
+    mx = (e.clientX / window.innerWidth - 0.5) * 20;
+    my = (e.clientY / window.innerHeight - 0.5) * 20;
+    document.querySelector('.aurora').style.transform = `translate(${mx}px, ${my}px)`;
+  });
+</script>
+</body>
+</html>
